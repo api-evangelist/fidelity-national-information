@@ -1,7 +1,12 @@
 aid: fidelity-national-information
-url: https://raw.githubusercontent.com/api-evangelist/fidelity-national-information/refs/heads/main/apis.yml
+url: 
+  https://raw.githubusercontent.com/api-evangelist/fidelity-national-information/refs/heads/main/apis.yml
 modified: '2026-03-21'
 apis: []
 common:
   - type: Website
     url: https://www.fidelity-national-information.com
+description: >-
+  Fidelity National Information Services (FIS) is a global provider of financial services
+  technology, with solutions in retail and institutional banking, payments, asset
+  and wealth management, risk and compliance, and outsourcing.
