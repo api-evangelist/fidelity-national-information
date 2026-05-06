@@ -4,7 +4,8 @@ schema: https://raw.githubusercontent.com/api-evangelist/interface-research/main
 provider: Fidelity National Information Services (FIS)
 providerId: fidelity-national-information
 created: '2026-05-04'
-modified: '2026-05-04'
+modified: '2026-05-05'
+reconciled: false
 tags:
   - Financial Services
   - Payments
@@ -12,80 +13,51 @@ tags:
   - Capital Markets
   - Wealth Management
   - Risk and Compliance
-  - Fortune 500
   - Rate Limiting
-  - Quotas
-  - Throttling
-description: Machine-readable rate limit definitions for the Fidelity National Information Services (FIS)
-  API surface. Captures per-tier quotas, burst behavior, response signaling, and recovery semantics. Defaults
-  are scaffold values to be replaced with published provider limits.
-headers:
-  limit: X-RateLimit-Limit
-  remaining: X-RateLimit-Remaining
-  reset: X-RateLimit-Reset
-  retryAfter: Retry-After
-  policy: RateLimit-Policy
+description: FIS does not publish global per-second rate limits in the public Code Connect documentation.
+  Each API and each customer environment has limits specific to the product (core banking, card processing,
+  capital markets) and the contracted volume. Sandbox endpoints have lower throughput than production;
+  production limits are governed by the customer's contract and underlying platform sizing.
+notes: No public per-second numbers. Rate limits are contract-bound; production throughput is sized to
+  the customer's transaction volume in the underlying FIS platform (Modern Banking Platform, IBS, Profile,
+  etc.).
+sources:
+  - https://codeconnect.fisglobal.com/
 responseCodes:
   throttled: 429
-  quotaExceeded: 429
+  serverError: 500
   serviceUnavailable: 503
+  unauthorized: 401
+  forbidden: 403
 limits:
-  - tier: free
-    name: Free Tier Default
-    scope: api-key
-    metric: requests_per_minute
-    limit: 10
-    burst: 20
-    timeFrame: minute
-    applies:
-      - FIS Code Connect API Marketplace
-  - tier: free
-    name: Free Tier Monthly Quota
-    scope: api-key
-    metric: requests_per_month
-    limit: 1000
-    timeFrame: month
-    applies:
-      - FIS Code Connect API Marketplace
-  - tier: professional
-    name: Professional Tier Default
-    scope: api-key
-    metric: requests_per_minute
-    limit: 100
-    burst: 200
-    timeFrame: minute
-    applies:
-      - FIS Code Connect API Marketplace
-  - tier: professional
-    name: Professional Tier Monthly Quota
-    scope: api-key
-    metric: requests_per_month
-    limit: 100000
-    timeFrame: month
-    applies:
-      - FIS Code Connect API Marketplace
-  - tier: enterprise
-    name: Enterprise Negotiated Limit
+  - name: Sandbox APIs (Code Connect Developer Portal)
+    scope: developer-account
+    metric: varies
+    limit: per-developer test ceiling; not publicly published
+    notes: Suitable for prototyping only.
+  - name: Production banking / payments APIs
     scope: contract
-    metric: requests_per_minute
-    limit: 1000
-    burst: 5000
-    timeFrame: minute
-    applies:
-      - FIS Code Connect API Marketplace
+    metric: varies
+    limit: sized to the customer's contracted transaction volume; not publicly published
+  - name: Capital Markets / Wealth APIs
+    scope: contract
+    metric: varies
+    limit: sized to firm volume and platform deployment; not publicly published
+  - name: Real-time payments (FedNow / RTP via FIS)
+    scope: contract
+    metric: varies
+    limit: governed by the underlying clearing rails and customer's certified throughput
 policies:
-  - name: Backoff Strategy
-    description: Clients should implement exponential backoff with jitter, honoring the Retry-After header
-      when present.
-  - name: Burst Handling
-    description: Short bursts above the steady-state limit are tolerated up to the documented burst ceiling
-      before throttling engages.
-  - name: Quota Reset
-    description: Monthly quotas reset at the start of each calendar month in UTC. Per-minute and per-second
-      windows reset on a sliding-window basis.
-  - name: Fair Use
-    description: Even on uncapped enterprise tiers, sustained usage that materially impacts shared infrastructure
-      may be subject to fair-use throttling.
+  - name: OAuth 2.0 / mTLS
+    description: Authenticate with OAuth 2.0 and/or mutual TLS depending on API; rotate credentials before
+      expiry.
+  - name: Backoff on 429/503
+    description: Exponential backoff with jitter on transient errors; honor Retry-After when present.
+  - name: Idempotency
+    description: Use idempotency keys on POST endpoints for payments and transfers to make retries safe.
+  - name: Customer-environment sizing
+    description: Production limits are sized to the customer's underlying platform deployment; raise via
+      FIS service request and capacity review.
 maintainers:
   - FN: Kin Lane
     email: kin@apievangelist.com

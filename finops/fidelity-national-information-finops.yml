@@ -8,10 +8,11 @@ alignedWith:
   dataSpecUrl: https://focus.finops.org/focus-specification/v1-3/
 provider: Fidelity National Information Services (FIS)
 providerId: fidelity-national-information
-publisherName: Fidelity National Information Services (FIS)
-serviceCategory: API
+publisherName: Fidelity National Information Services, Inc.
+serviceCategory: Financial Services Technology
 created: '2026-05-04'
-modified: '2026-05-04'
+modified: '2026-05-05'
+reconciled: false
 tags:
   - Financial Services
   - Payments
@@ -19,25 +20,35 @@ tags:
   - Capital Markets
   - Wealth Management
   - Risk and Compliance
-  - Fortune 500
   - FinOps
   - Cost Management
   - FOCUS
-description: FinOps framework definition for the Fidelity National Information Services (FIS) API surface.
-  Provides a FOCUS-aligned mapping for cost allocation, usage measurement, and unit-economics reporting
-  across the provider's APIs.
+description: 'FOCUS-aligned FinOps for FIS: cost is bundled into multi-year platform contracts covering
+  core banking (Modern Banking Platform, IBS, Profile), payments (Worldpay-from-FIS, FedNow), capital
+  markets, wealth, and risk/compliance products. The Code Connect APIs are entitlements within those
+  contracts rather than a per-call billed product. FinOps focuses on transaction-volume tiering, professional-services
+  spend, and managed-service tier selection rather than API-call meters.'
+notes: FIS publishes no list prices. Reconcile FinOps values from the active FIS product contract and
+  monthly invoice line items.
+sources:
+  - https://codeconnect.fisglobal.com/
+  - https://www.fisglobal.com/
 principles:
   - name: Visibility
-    description: Make API consumption costs visible to engineering, product, and finance teams in near
-      real-time.
+    description: Pull monthly FIS invoices and reconcile against contracted volume tiers; track API call
+      volume in Code Connect developer dashboards (where exposed); track transaction volume in the underlying
+      product (e.g. card transactions in Worldpay reporting, payments in Modern Banking Platform reports).
   - name: Allocation
-    description: Tag every chargeable API call with the consuming team, environment, application, and
-      feature so cost can be allocated.
+    description: Allocate FIS contract cost by line of business (retail banking, commercial banking, capital
+      markets, wealth) and by contracted module; tag API calls by Code Connect application/consumer.
   - name: Optimization
-    description: Continuously evaluate request patterns, caching, batching, and tier selection to reduce
-      cost per useful unit of work.
+    description: Right-size contract volume tiers each annual review; consolidate overlapping FIS products
+      where possible; avoid redundant API integrations across teams; leverage included professional-services
+      hours rather than buying additional engagements.
   - name: Accountability
-    description: Establish budget owners and chargeback or showback flows for each consuming team.
+    description: Vendor management / strategic sourcing owns the FIS master agreement; product line owners
+      own per-module consumption; quarterly business reviews with FIS to true up volumes and identify
+      optimization candidates.
 domains:
   - name: Understand Usage and Cost
     capabilities:
@@ -54,83 +65,85 @@ domains:
       - Unit Economics
   - name: Optimize Usage and Cost
     capabilities:
-      - Architecting for Cloud
       - Rate Optimization
       - Workload Optimization
-      - Cloud Sustainability
       - Licensing and SaaS
   - name: Manage the FinOps Practice
     capabilities:
       - FinOps Practice Operations
-      - FinOps Education and Enablement
       - Invoicing and Chargeback
       - Onboarding Workloads
-      - Intersecting Disciplines
 billingModel:
-  pricingCategory: Usage-Based
-  billingFrequency: Monthly
+  pricingCategory: Multi-Year Platform Contract + Transaction Volume Tiers
+  billingFrequency: Monthly (operating fees) + Annual (license / professional services)
   billingCurrency: USD
   chargeCategories:
-    - Usage
     - Purchase
-    - Tax
-    - Credit
+    - Usage
     - Adjustment
+    - Tax
   chargeFrequency: Recurring
 focusColumns:
-  ServiceName: Fidelity National Information Services (FIS)
-  ServiceCategory: Developer Tools / API
-  ProviderName: Fidelity National Information Services (FIS)
-  PublisherName: Fidelity National Information Services (FIS)
-  InvoiceIssuerName: Fidelity National Information Services (FIS)
-  PricingCategory: Usage-Based
-  PricingUnit: request
+  ServiceName: FIS
+  ServiceCategory: Financial Services Technology
+  ProviderName: FIS
+  PublisherName: Fidelity National Information Services, Inc.
+  InvoiceIssuerName: Fidelity National Information Services, Inc.
+  PricingCategory: Subscription + Transaction Volume
+  PricingUnit: contract | transaction
   BillingCurrency: USD
-  ChargeCategory: Usage
+  ChargeCategory: Purchase
 meters:
-  - name: api_requests
-    description: Count of billable API requests
-    unit: request
+  - name: api_calls
+    description: Code Connect API call volume per consumer application (where reported).
+    unit: call
     aggregation: sum
     dimensions:
       - api
-      - endpoint
-      - tier
-      - region
-      - consumer
-  - name: data_egress
-    description: Bytes returned over the network in API responses
-    unit: GB
+      - application
+      - environment
+  - name: card_transactions
+    description: Card transactions processed via Worldpay-from-FIS.
+    unit: transaction
     aggregation: sum
     dimensions:
-      - api
-      - region
-      - consumer
-  - name: compute_seconds
-    description: Server-side compute consumed by the request, where applicable
-    unit: second
+      - merchant
+      - card_brand
+      - country
+  - name: payments
+    description: Real-time / batch payments processed (FedNow, RTP, ACH via FIS).
+    unit: payment
     aggregation: sum
     dimensions:
-      - api
-      - endpoint
-      - tier
+      - rail
+      - originator
+  - name: accounts_under_management
+    description: Active deposit / wealth accounts on the FIS platform.
+    unit: account
+    aggregation: max
+    dimensions:
+      - product_module
+  - name: professional_services_hours
+    description: Consumed professional-services hours against the contracted bank.
+    unit: hour
+    aggregation: sum
+    dimensions:
+      - engagement
 apis:
   - name: FIS Code Connect API Marketplace
-    baseURL: ''
-    tags:
-      - API Marketplace
-      - Payments
-      - Banking
-      - Capital Markets
+    baseURL: https://codeconnect.fisglobal.com/
     serviceName: FIS Code Connect API Marketplace
     serviceCategory: API
 unitEconomics:
-  - name: Cost per 1K Requests
-    metric: billed_cost / (api_requests / 1000)
-    target: TBD
-  - name: Cost per Active Consumer
-    metric: billed_cost / active_consumers
-    target: TBD
+  - name: Cost per Card Transaction (Worldpay)
+    metric: card_processing_cost / card_transactions
+    target: contract-dependent
+  - name: Cost per Account / month (Modern Banking Platform)
+    metric: platform_cost / accounts_under_management
+    target: contract-dependent
+  - name: PS Hours Burn vs. Contracted Bank
+    metric: professional_services_hours / contracted_hours
+    target: less than 100% before renewal
 maintainers:
   - FN: Kin Lane
     email: kin@apievangelist.com
