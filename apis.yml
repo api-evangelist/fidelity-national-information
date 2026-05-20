@@ -39,6 +39,8 @@ apis:
       - type: Documentation
         url: https://codeconnect.fisglobal.com/
 common:
+  - type: LinkedIn
+    url: https://www.linkedin.com/company/fis
   - type: Website
     url: https://www.fisglobal.com/
   - type: DeveloperPortal
