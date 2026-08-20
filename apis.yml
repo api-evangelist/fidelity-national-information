@@ -21,6 +21,14 @@ accessModel:
   method: derived
 image: https://kinlane-images.s3.amazonaws.com/shared/apis-json/icons/fidelity-national-information.png
 tags:
+  - Financial-Services
+  - Payments
+  - Banking
+  - Capital Markets
+  - Wealth Management
+  - Risk and Compliance
+  - Fortune 500
+tags_raw:
   - Financial Services
   - Payments
   - Banking
